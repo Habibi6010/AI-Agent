@@ -1,0 +1,271 @@
+{
+  "name": "Extract Infromation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        -240
+      ],
+      "id": "0fe4516a-04a7-4481-b2f9-5c23d2b83b2f",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1V_y7CYJT7dnlMyEHIJw9b0hAUXzcanNOqu04AbqNcjI",
+          "mode": "list",
+          "cachedResultName": "url list",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_y7CYJT7dnlMyEHIJw9b0hAUXzcanNOqu04AbqNcjI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1V_y7CYJT7dnlMyEHIJw9b0hAUXzcanNOqu04AbqNcjI/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -900,
+        -240
+      ],
+      "id": "56b78b28-4202-4056-8dac-33f7a5c34023",
+      "name": "Google Sheets: List of URL for scraping ",
+      "alwaysOutputData": false,
+      "notesInFlow": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "clMUaTxlHAnsLvBB",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "91d187ed-a0d9-4b7a-ae6e-ca5bd0707122",
+              "name": "URL",
+              "value": "={{ $json.URL }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -660,
+        -240
+      ],
+      "id": "13e55464-c0ea-4d3d-8d04-03a3834744f5",
+      "name": "Edit Fields",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -440,
+        -240
+      ],
+      "id": "20628b50-02c8-4c26-8777-32b7f3d823e6",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.URL }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -260,
+        -100
+      ],
+      "id": "2604d4fa-93d7-4fff-ab1b-3e1a398e485d",
+      "name": "HTTP Request",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $json[\"data\"]; // Get raw HTML content\n\n// Remove script, style, and metadata content\nconst cleanedHtml = html\n    .replace(/<script[\\s\\S]*?>[\\s\\S]*?<\\/script>/gi, '')  // Remove <script> tags\n    .replace(/<style[\\s\\S]*?>[\\s\\S]*?<\\/style>/gi, '')  // Remove <style> tags\n    .replace(/<noscript[\\s\\S]*?>[\\s\\S]*?<\\/noscript>/gi, '')  // Remove <noscript> tags\n    .replace(/<meta[\\s\\S]*?>/gi, '')  // Remove <meta> tags\n    .replace(/<link[\\s\\S]*?>/gi, '')  // Remove <link> tags\n    .replace(/<\\/?[^>]+(>|$)/g, ' ')  // Remove all other HTML tags\n    .replace(/\\s+/g, ' ')  // Normalize spaces\n    .trim();  // Trim whitespace\n\nreturn [{ url:$('Loop Over Items').first().json.URL ,clean_text: cleanedHtml }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        -100
+      ],
+      "id": "ccc2259b-4a96-4c88-88ff-6199939f6d42",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "folderId": "1Ydl5V5N85L1uhBxjyh2aZ2FYCNP-W5wj",
+        "title": "={{ $json.url }}"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        120,
+        -100
+      ],
+      "id": "7e50d012-dae4-4c0c-9ab4-a1e6c76e528c",
+      "name": "Google Docs: Create docs",
+      "executeOnce": false,
+      "notesInFlow": false,
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "z9dHrXHvQfkFAQKF",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{ $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $('Code').item.json.clean_text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        340,
+        -100
+      ],
+      "id": "4aa00624-595d-4aa1-9b7d-0002c9cb82ad",
+      "name": "Google Docs",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "z9dHrXHvQfkFAQKF",
+          "name": "Google Docs account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets: List of URL for scraping ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets: List of URL for scraping ": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Google Docs: Create docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Docs: Create docs": {
+      "main": [
+        [
+          {
+            "node": "Google Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Docs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b5b1264e-98fa-4a24-b532-ad895ec408d8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8a5597b643ed5ed7ddad6cd8b0dc95f16bdd6bcc50c8a7d944715b8ddbbcc3cf"
+  },
+  "id": "AE6U5DTgXRT67Q2G",
+  "tags": []
+}
